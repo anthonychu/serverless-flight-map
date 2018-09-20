@@ -40,7 +40,7 @@ namespace ServerlessTrivia
                 DataFileName = $"{containerName}/{iteration}.json"
             });
 
-            var waitUntil = context.CurrentUtcDateTime.AddMilliseconds(1000);
+            var waitUntil = context.CurrentUtcDateTime.AddMilliseconds(10000);
             await context.CreateTimer(waitUntil, CancellationToken.None);
 
             if (iteration < maxIterations) 
