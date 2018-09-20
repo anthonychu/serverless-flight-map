@@ -1,0 +1,140 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Serverless flights</title>
+  <link href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" />
+</head>
+<body>
+  
+  <div style="font-family:FontAwesome;position:absolute;color:transparent;">Preload font, otherwise we may end up trying to use it before it is available.</div>
+  <div id='myMap' style='width: 100%; height: 100%;'></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@aspnet/signalr@1.0.3/dist/browser/signalr.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios@0.18.0/dist/axios.min.js"></script>
+  <script>
+    const apiBaseUrl = 'http://localhost:7071'
+    const axiosConfig = {}
+    let map
+    const iconSize = 32
+
+    getConnectionInfo().then(function(info) {
+      let accessToken = info.accessToken
+      const options = {
+        accessTokenFactory: function() {
+          if (accessToken) {
+            const _accessToken = accessToken
+            accessToken = null
+            return _accessToken
+          } else {
+            return getConnectionInfo().then(function(info) {
+              return info.accessToken
+            })
+          }
+        }
+      }
+
+      const connection = new signalR.HubConnectionBuilder()
+        .withUrl(info.url, options)
+        .build()
+
+      connection.on('newFlightData', newFlightData)
+      connection.onclose(function() {
+        console.log('disconnected')
+        setTimeout(function() { startConnection(connection) }, 2000)
+      })
+
+      startConnection(connection)
+      
+    }).catch(console.error)
+
+    var pins = {}
+
+    function newFlightData(data) {
+      if (!map) return
+
+      for (var f of data.flights) {
+        var pin = pins[f.id]
+        if (!pin) {
+          pin = new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location(f.latitude, f.longitude), {
+              title: f.callsign,
+              anchor: new Microsoft.Maps.Point(iconSize/2, iconSize/2)
+          })
+          pins[f.id] = pin
+          map.entities.push(pin)
+        }
+        pin.setLocation(new Microsoft.Maps.Location(f.latitude, f.longitude))
+        pin.setOptions({
+          icon: createIcon(f.heading || 0)
+        })
+      }
+
+      for (var k in pins) {
+        if (!data.flights.find(f => k == f.id)) {
+          pins[k] = null
+          map.entities.remove(pin)
+        }
+      }
+    }
+
+    function startConnection(connection) {
+      console.log('connecting...')
+      connection.start()
+        .then(function() { console.log('connected!') })
+        .catch(function(err) {
+          console.error(err)
+          setTimeout(function() { startConnection(connection) }, 2000)
+        })
+    }
+
+    function getConnectionInfo() {
+      return axios.post(`${apiBaseUrl}/api/SignalRInfo`, null, axiosConfig)
+        .then(function(resp) { return resp.data })
+        .catch(function() { return {} })
+    }
+
+    function loadMapScenario() {
+      map = new Microsoft.Maps.Map(document.getElementById('myMap'), {
+          credentials: 'AgKE0ezrjOTqM6j5mzadtCIv0V1oKTQVLwXcyj2llKiYNAaevpjhydmItUTmkDGn'
+      })
+      map.setView({ zoom: 1 })
+    }
+
+    function createIcon(heading) {
+        var c = document.createElement('canvas')
+        var ctx = c.getContext('2d')
+        var text = '\uf072'
+        //Define font style
+        var font = iconSize + 'px FontAwesome'
+        ctx.font = font
+
+        var canvasSize = iconSize + 16
+
+        //Resize canvas based on sie of text.
+        var size = ctx.measureText(text)
+        c.width = canvasSize
+        c.height = canvasSize
+
+        //Reset font as it will be cleared by the resize.
+        ctx.font = font
+        ctx.textBaseline = 'top'
+        ctx.fillStyle = '#6666aa'
+
+        heading = heading - 45
+        if (heading < 0) {
+          heading += 360
+        }
+
+        ctx.translate(canvasSize/2, canvasSize/2)
+        ctx.rotate(heading * Math.PI / 180)
+        ctx.translate(-canvasSize/2, -canvasSize/2)
+        ctx.fillText(text, 8, 8)
+
+        return c.toDataURL()
+    }
+  </script>
+
+  <script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol?callback=loadMapScenario' async defer></script>
+</body>
+</html>
