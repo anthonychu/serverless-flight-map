@@ -4,7 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Serverless flights</title>
-  <link href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" />
 </head>
 <body>
   
@@ -98,7 +98,10 @@
       map = new Microsoft.Maps.Map(document.getElementById('myMap'), {
           credentials: 'AgKE0ezrjOTqM6j5mzadtCIv0V1oKTQVLwXcyj2llKiYNAaevpjhydmItUTmkDGn'
       })
-      map.setView({ zoom: 1 })
+      map.setView({
+        zoom: 9,
+        center: new Microsoft.Maps.Location(29.4607289, -83.4695585)
+      })
     }
 
     function createIcon(heading) {
