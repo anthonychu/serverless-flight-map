@@ -27,7 +27,7 @@ namespace ServerlessTrivia
             [OrchestrationTrigger] DurableOrchestrationContext context,
             ILogger logger)
         {
-            const int maxIterations = 200;
+            const int maxIterations = 480;
             var iteration = context.GetInput<int>();
             if (iteration >= maxIterations)
             {
@@ -39,6 +39,9 @@ namespace ServerlessTrivia
                 Iteration = iteration,
                 DataFileName = $"{containerName}/{iteration}.json"
             });
+
+            var waitUntil = context.CurrentUtcDateTime.AddMilliseconds(500);
+            await context.CreateTimer(waitUntil, CancellationToken.None);
 
             if (iteration < maxIterations) 
             {
