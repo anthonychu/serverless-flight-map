@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AzureFunctionsVersion></AzureFunctionsVersion>
+    <AzureFunctionsVersion>v2</AzureFunctionsVersion>
     <RootNamespace>serverless_flights</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
