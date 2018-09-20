@@ -40,9 +40,6 @@ namespace ServerlessTrivia
                 DataFileName = $"{containerName}/{iteration}.json"
             });
 
-            var waitUntil = context.CurrentUtcDateTime.AddMilliseconds(10000);
-            await context.CreateTimer(waitUntil, CancellationToken.None);
-
             if (iteration < maxIterations) 
             {
                 context.ContinueAsNew(iteration + 1);
@@ -67,6 +64,9 @@ namespace ServerlessTrivia
             {
                 var jsonTextReader = new JsonTextReader(streamReader);
                 var data = JsonSerializer.CreateDefault().Deserialize<Data>(jsonTextReader);
+
+                // inject a wait so we don't go too fast
+                await Task.Delay(1000);
 
                 var flightData = new
                 {
