@@ -34,15 +34,28 @@ namespace ServerlessTrivia
                 iteration = 0;
             }
 
-            await context.CallActivityAsync(nameof(GetAndSendData), new IterationInput
+            try
             {
-                Iteration = iteration,
-                DataFileName = $"{containerName}/{iteration}.json"
-            });
-
-            if (iteration < maxIterations) 
+                await context.CallActivityAsync(nameof(GetAndSendData), new IterationInput
+                {
+                    Iteration = iteration,
+                    DataFileName = $"{containerName}/{iteration}.json"
+                });
+            }
+            catch (Exception ex)
             {
-                context.ContinueAsNew(iteration + 1);
+                ILogger.LogError(ex.ToString());   
+            }
+            finally
+            {
+                if (iteration < maxIterations) 
+                {
+                    context.ContinueAsNew(iteration + 1);
+                }
+                else
+                {
+                    context.ContinueAsNew(0);
+                }
             }
         }
 
