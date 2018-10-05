@@ -44,7 +44,7 @@ namespace ServerlessTrivia
             }
             catch (Exception ex)
             {
-                ILogger.LogError(ex.ToString());   
+                logger.LogError(ex.ToString());   
             }
             finally
             {
@@ -108,7 +108,7 @@ namespace ServerlessTrivia
         public static async Task<HttpResponseMessage> HttpStartSingle(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestMessage req,
             [OrchestrationClient] DurableOrchestrationClient starter,
-            TraceWriter log)
+            ILogger log)
         {
             const string instanceId = "1";
             // Check if an instance with the specified ID already exists.
@@ -116,7 +116,7 @@ namespace ServerlessTrivia
             if (existingInstance == null)
             {
                 await starter.StartNewAsync(nameof(FlightsOrchestrator), instanceId);
-                log.Info($"Started orchestration with ID = '{instanceId}'.");
+                log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
                 return starter.CreateCheckStatusResponse(req, instanceId);
             }
             else
